@@ -7,15 +7,15 @@ from nanovllm import LLM, SamplingParams
 
 def main():
     seed(0)
-    num_seqs = 256
-    max_input_len = 1024
-    max_ouput_len = 1024
+    num_seqs = 128
+    input_len = [16, 32]
+    output_len = [512, 1024]
 
-    path = os.path.expanduser("/home/gpu2-user4/yufei/models/Qwen3-4B-AWQ/")
+    path = os.path.expanduser("/home/gpu2-user4/yufei/models/Qwen3-14B")
     llm = LLM(path, enforce_eager=False, max_model_len=4096)
 
-    prompt_token_ids = [[randint(0, 10000) for _ in range(randint(100, max_input_len))] for _ in range(num_seqs)]
-    sampling_params = [SamplingParams(temperature=0.6, ignore_eos=True, max_tokens=randint(100, max_ouput_len)) for _ in range(num_seqs)]
+    prompt_token_ids = [[randint(0, 10000) for _ in range(randint(input_len[0], input_len[1]))] for _ in range(num_seqs)]
+    sampling_params = [SamplingParams(temperature=0.6, ignore_eos=True, max_tokens=randint(output_len[0], output_len[1])) for _ in range(num_seqs)]
     # uncomment the following line for vllm
     # prompt_token_ids = [dict(prompt_token_ids=p) for p in prompt_token_ids]
 
@@ -25,6 +25,7 @@ def main():
     t = (time.time() - t)
     total_tokens = sum(sp.max_tokens for sp in sampling_params)
     throughput = total_tokens / t
+    print(f"Model: {path.split('/')[-1]}")
     print(f"Total: {total_tokens}tok, Time: {t:.2f}s, Throughput: {throughput:.2f}tok/s")
 
 

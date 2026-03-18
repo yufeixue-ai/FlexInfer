@@ -1,11 +1,11 @@
-<h1 align="center"><strong><em>FlexInfer</em></strong></h1>
-<h3 align="center">A decoupled, configurable, easy-to-modify codebase for LLM acceleration.</h3>
+<h1 align="center"><code>FlexInfer</code></h1>
+<h3 align="center">A decoupled and configurable codebase for LLM acceleration.</h3>
 
 ## 🔙 Precursor
 
-This repository is a secondary development effort built on top of [nano-vLLM](https://github.com/GeeeekExplorer/nano-vllm), with additional ideas adapted from [vLLM](https://github.com/vllm-project/vllm).
+This repository is a secondary development effort built on top of [Nano-vLLM](https://github.com/GeeeekExplorer/nano-vllm), with additional features adapted from [vLLM](https://github.com/vllm-project/vllm).
 
-For the original lightweight implementation and baseline features, please refer to the upstream projects.
+To get started, please refer to the upstream projects [[Nano-vLLM]](https://github.com/GeeeekExplorer/nano-vllm).
 
 ## 🚀 Latest News
 

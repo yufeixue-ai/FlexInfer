@@ -169,14 +169,20 @@ class AWQLinearMethod(LinearMethodBase):
         scales = layer.scales
         qzeros = layer.qzeros
         pack_factor = self.quant_config.pack_factor
-        split_k_iters = 8
         out_shape = x.shape[:-1] + (qweight.shape[-1] * pack_factor,)
         reshaped_x = x.reshape(-1, x.shape[-1])
+        num_rows = reshaped_x.shape[0]
 
-        # num_tokens >= threshold
-        FP16_MATMUL_HEURISTIC_CONDITION = x.shape[:-1].numel() >= 256
+        # On A100 with the Triton fallback, the AWQ GEMM path is only competitive
+        # at small row counts. Past roughly 48 rows, dequantize + matmul wins.
+        if num_rows < 16:
+            split_k_iters = 8
+        elif num_rows < 48:
+            split_k_iters = 4
+        else:
+            split_k_iters = 0
 
-        if FP16_MATMUL_HEURISTIC_CONDITION:
+        if split_k_iters == 0:
             out = awq_dequantize(qweight, scales, qzeros)
             out = torch.matmul(reshaped_x, out)
         else:

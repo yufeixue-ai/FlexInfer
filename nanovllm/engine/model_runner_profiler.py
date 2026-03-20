@@ -189,7 +189,10 @@ class ModelRunner:
     @torch.inference_mode()
     def run_model(self, input_ids: torch.Tensor, positions: torch.Tensor, is_prefill: bool):
         if is_prefill or self.enforce_eager or input_ids.size(0) > 512:
-            return self.model.compute_logits(self.model(input_ids, positions))
+            with torch.profiler.record_function("flexinfer/model.forward_eager"):
+                hidden_states = self.model(input_ids, positions)
+            with torch.profiler.record_function("flexinfer/model.compute_logits"):
+                return self.model.compute_logits(hidden_states)
         else:
             bs = input_ids.size(0)
             context = get_context()
@@ -202,16 +205,25 @@ class ModelRunner:
             graph_vars["context_lens"].zero_()
             graph_vars["context_lens"][:bs] = context.context_lens
             graph_vars["block_tables"][:bs, :context.block_tables.size(1)] = context.block_tables
-            graph.replay()
-            return self.model.compute_logits(graph_vars["outputs"][:bs])
+            with torch.profiler.record_function("flexinfer/model.forward_cudagraph_replay"):
+                graph.replay()
+            with torch.profiler.record_function("flexinfer/model.compute_logits"):
+                return self.model.compute_logits(graph_vars["outputs"][:bs])
 
     def run(self, seqs: list[Sequence], is_prefill: bool) -> list[int]:
-        input_ids, positions = self.prepare_prefill(seqs) if is_prefill else self.prepare_decode(seqs)
-        temperatures = self.prepare_sample(seqs) if self.rank == 0 else None
-        logits = self.run_model(input_ids, positions, is_prefill)
-        token_ids = self.sampler(logits, temperatures).tolist() if self.rank == 0 else None
-        reset_context()
-        return token_ids
+        stage_name = "prefill" if is_prefill else "decode"
+        with torch.profiler.record_function(f"flexinfer/model_runner.run.{stage_name}"):
+            with torch.profiler.record_function(f"flexinfer/prepare_{stage_name}"):
+                input_ids, positions = (
+                    self.prepare_prefill(seqs) if is_prefill else self.prepare_decode(seqs)
+                )
+            with torch.profiler.record_function("flexinfer/prepare_sample"):
+                temperatures = self.prepare_sample(seqs) if self.rank == 0 else None
+            logits = self.run_model(input_ids, positions, is_prefill)
+            with torch.profiler.record_function("flexinfer/sample"):
+                token_ids = self.sampler(logits, temperatures).tolist() if self.rank == 0 else None
+            reset_context()
+            return token_ids
 
     @torch.inference_mode()
     def capture_cudagraph(self):

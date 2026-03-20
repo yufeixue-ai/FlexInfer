@@ -1,4 +1,10 @@
 import os
+import sys
+from pathlib import Path
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 import time
 from random import randint, seed
 
@@ -14,9 +20,9 @@ def safe_tps(num_tokens: int, elapsed: float) -> float:
 def main(model_name):
     seed(0)
 
-    num_seqs = 8
+    num_seqs = 1
     input_len = 64
-    output_len = 1024
+    output_len = 512
 
     path = os.path.expanduser(f"/home/gpu2-user4/yufei/models/{model_name}")
     llm = LLM(path, enforce_eager=False, max_model_len=4096)
@@ -87,7 +93,7 @@ def main(model_name):
 
 
 if __name__ == "__main__":
-    # main("Qwen3-14B")
-    main("Qwen3-14B-AWQ")
+    main("Qwen3-14B")
+    # main("Qwen3-14B-AWQ")
 
-# export CUDA_VISIBLE_DEVICES=0 && python benchmark.py
+# export CUDA_VISIBLE_DEVICES=0 && python benchmark/benchmark.py

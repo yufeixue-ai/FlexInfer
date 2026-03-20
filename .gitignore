@@ -197,3 +197,4 @@ cython_debug/
 # Legacy files and directories
 *legacy*
 *legacy*/ 
+traces/

@@ -4,7 +4,6 @@ from time import perf_counter
 from tqdm.auto import tqdm
 from transformers import AutoTokenizer
 import torch.multiprocessing as mp
-from torch.profiler import record_function
 
 from nanovllm.config import Config
 from nanovllm.sampling_params import SamplingParams
@@ -49,17 +48,12 @@ class LLMEngine:
         self.scheduler.add(seq)
 
     def step(self):
-        with record_function("flexinfer/llm_engine.step"):
-            with record_function("flexinfer/scheduler.schedule"):
-                seqs, is_prefill = self.scheduler.schedule()
-            stage_name = "prefill" if is_prefill else "decode"
-            with record_function(f"flexinfer/model_runner.{stage_name}"):
-                token_ids = self.model_runner.call("run", seqs, is_prefill)
-            with record_function("flexinfer/scheduler.postprocess"):
-                self.scheduler.postprocess(seqs, token_ids)
-            outputs = [(seq.seq_id, seq.completion_token_ids) for seq in seqs if seq.is_finished]
-            num_tokens = sum(len(seq) for seq in seqs) if is_prefill else -len(seqs)
-            return outputs, num_tokens
+        seqs, is_prefill = self.scheduler.schedule()
+        token_ids = self.model_runner.call("run", seqs, is_prefill)
+        self.scheduler.postprocess(seqs, token_ids)
+        outputs = [(seq.seq_id, seq.completion_token_ids) for seq in seqs if seq.is_finished]
+        num_tokens = sum(len(seq) for seq in seqs) if is_prefill else -len(seqs)
+        return outputs, num_tokens
 
     def is_finished(self):
         return self.scheduler.is_finished()

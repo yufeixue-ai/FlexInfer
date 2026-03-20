@@ -22,9 +22,9 @@ def main(model_name):
 
     num_seqs = 1
     input_len = 64
-    output_len = 512
+    output_len = 1024
 
-    path = os.path.expanduser(f"/home/gpu2-user4/yufei/models/{model_name}")
+    path = os.path.expanduser(f"/home/yxueat/models/{model_name}")
     llm = LLM(path, enforce_eager=False, max_model_len=4096)
 
     prompt_token_ids = [
@@ -93,7 +93,7 @@ def main(model_name):
 
 
 if __name__ == "__main__":
-    main("Qwen3-14B")
-    # main("Qwen3-14B-AWQ")
+    # main("Qwen3-4B")
+    main("Qwen3-4B-AWQ")
 
 # export CUDA_VISIBLE_DEVICES=0 && python benchmark/benchmark.py

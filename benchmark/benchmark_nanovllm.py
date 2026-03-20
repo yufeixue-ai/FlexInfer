@@ -11,7 +11,7 @@ def main():
     input_len = [16, 32]
     output_len = [512, 1024]
 
-    path = os.path.expanduser("/home/gpu2-user4/yufei/models/Qwen3-14B")
+    path = os.path.expanduser("/home/yxueat/models/Qwen3-4B")
     llm = LLM(path, enforce_eager=False, max_model_len=4096)
 
     prompt_token_ids = [[randint(0, 10000) for _ in range(randint(input_len[0], input_len[1]))] for _ in range(num_seqs)]

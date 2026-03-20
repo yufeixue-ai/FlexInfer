@@ -14,7 +14,7 @@ from nanovllm.layers.quantization.awq_triton import (
 
 
 def benchmark_model(model_name: str, num_seqs: int, input_len: int, output_len: int):
-    path = os.path.expanduser(f"/home/gpu2-user4/yufei/models/{model_name}")
+    path = os.path.expanduser(f"/home/yxueat/models/{model_name}/")
     llm = LLM(path, enforce_eager=False, max_model_len=input_len + output_len)
     prompts = [[i % 10000 for i in range(input_len)] for _ in range(num_seqs)]
     sampling_params = [
@@ -143,7 +143,7 @@ def main():
     compare_parser.add_argument(
         "--models",
         nargs="+",
-        default=["Qwen3-14B-AWQ", "Qwen3-14B"],
+        default=["Qwen3-4B-AWQ", "Qwen3-4B"],
     )
     compare_parser.add_argument("--num-seqs", type=int, required=True)
     compare_parser.add_argument("--input-len", type=int, required=True)
